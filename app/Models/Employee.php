@@ -15,6 +15,13 @@ class Employee extends Model
         'jenis_kelamin', 
         'alamat_tempat_tinggal', 
         'no_whatsapp', 
-        'jabatan_posisi'
+        'jabatan_posisi',
+        'rfid_uid'
     ];
+
+    // Relasi ke data pengajuan cuti
+    public function leaveRequests()
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
 }

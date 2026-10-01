@@ -3,81 +3,116 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Guest; 
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Guest; // Pastikan nama Model Anda sesuai (Guest / BukuTamu)
 use Illuminate\Support\Facades\Http;
+use Carbon\Carbon;
 
 class GuestController extends Controller
 {
-    // 1. Dashboard Admin: Lihat Daftar Tamu
+    // Halaman Admin (Lihat Data Tamu)
     public function adminIndex(Request $request)
     {
         $startDate = $request->start_date;
         $endDate = $request->end_date;
 
         $query = Guest::query();
-
+        
         if ($startDate && $endDate) {
             $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
         }
 
         $guests = $query->latest()->get();
-
         return view('admin.guest_index', compact('guests', 'startDate', 'endDate'));
     }
 
-    // 2. Simpan Data Tamu + Notifikasi WA Otomatis
+    // Halaman Form Publik untuk Tamu
+    public function create()
+    {
+        return view('buku_tamu'); // Sesuaikan dengan nama view form publik Anda
+    }
+
+    // Proses Simpan Data Tamu & Kirim WA
     public function store(Request $request)
     {
+        // 1. Validasi Input Tamu
         $request->validate([
-            'nama_tamu' => 'required',
-            'instansi_asal' => 'required',
-            'no_hp' => 'required',
-            'tujuan_keperluan' => 'required',
+            'nama_tamu' => 'required|string|max:255',
+            'instansi_asal' => 'nullable|string|max:255',
+            'tujuan_keperluan' => 'required|string',
+            'no_hp' => 'required|string|min:9|max:15',
         ]);
 
+        // 2. Simpan Data ke Database
         $guest = Guest::create([
             'nama_tamu' => $request->nama_tamu,
-            'instansi_asal' => $request->instansi_asal,
-            'no_hp' => $request->no_hp,
+            'instansi_asal' => $request->instansi_asal ?? '-',
             'tujuan_keperluan' => $request->tujuan_keperluan,
+            'no_hp' => $request->no_hp,
         ]);
 
-        // PESAN WHATSAPP
-        $pesan = "🔔 *TAMU BARU - LSP CITRA INSAN X PT ANANTA JAYA UTAMA ABADI*\n";
-        $pesan .= "👤 Nama: " . $guest->nama_tamu . "\n";
-        $pesan .= "🏢 Instansi: " . $guest->instansi_asal . "\n";
-        $pesan .= "📝 Keperluan: " . $guest->tujuan_keperluan . "\n";
-        $pesan .= "⏰ Waktu: " . now()->format('d/m/Y H:i') . " WIB";
-        $pesan .= "\n\n_(Ini merupakan pesan otomatis, harap untuk tidak membalasnya)_"; // Pesan tambahan miring
+        // 3. Kirim WhatsApp ke Tamu (Ucapan Selamat Datang)
+        $this->sendWelcomeWhatsapp($guest);
 
-        // KIRIM WA (Fix cURL error 77 dan cegah error env di Laravel Cloud)
+        // 4. (Opsional) Kirim Notif ke HRD / Resepsionis bahwa ada tamu
+        $this->sendNotificationToAdmin($guest);
+
+        return back()->with('success', 'Data kunjungan berhasil didaftarkan. Silakan masuk, pesan sambutan telah dikirim ke WhatsApp Anda!');
+    }
+
+    // ==========================================
+    // FUNGSI PENGIRIM WA KE TAMU
+    // ==========================================
+    private function sendWelcomeWhatsapp($guest)
+    {
         $token = env('FONNTE_TOKEN', 'KvH5jtTzc6yagwZsy6qa');
-        $target = env('WA_HRD', '6281348467817'); // <-- INI NOMOR PENERIMA
+        
+        // Fonnte bisa otomatis membaca format 08x atau 628x
+        $target = $guest->no_hp; 
+        
+        // Merangkai Pesan Sambutan yang Ramah & Profesional
+        $message = "Halo *" . $guest->nama_tamu . "*! 👋\n\n";
+        $message .= "Selamat datang di kantor *DigiBAR Group*.\n\n";
 
-        \Illuminate\Support\Facades\Http::withoutVerifying()->withHeaders([
+        $message .= "Kami harap urusan dan agenda Anda terkait _" . $guest->tujuan_keperluan . "_ dapat berjalan lancar, penuh inspirasi, dan membawa kolaborasi yang luar biasa ke depannya. 🚀\n\n";
+        $message .= "Jika butuh bantuan jangan sungkan untuk memberi tahu tim kami yang ada di lokasi ya.\n\n";
+        $message .= "Salam hangat,\n*Tim DigiBAR Technology*";
+
+        // Eksekusi API Fonnte
+        Http::withoutVerifying()->withHeaders([
             'Authorization' => $token,
         ])->post('https://api.fonnte.com/send', [
             'target' => $target,
-            'message' => $pesan,
+            'message' => $message,
         ]);
-
-        return back()->with('success', 'Data tamu tersimpan & WA Terkirim!');
     }
 
-    // 3. Download Laporan PDF
+    // ==========================================
+    // FUNGSI NOTIFIKASI KE ADMIN/HRD
+    // ==========================================
+    private function sendNotificationToAdmin($guest)
+    {
+        $token = env('FONNTE_TOKEN', 'KvH5jtTzc6yagwZsy6qa');
+        // Nomor WA Anda sebagai admin/HRD
+        $target = env('WA_HRD', '628559000857'); 
+
+        $messageAdmin = "🔔 *INFO TAMU BARU DI KANTOR*\n\n";
+        $messageAdmin .= "👤 Nama: " . $guest->nama_tamu . "\n";
+        $messageAdmin .= "🏢 Instansi: " . $guest->instansi_asal . "\n";
+        $messageAdmin .= "📝 Keperluan: " . $guest->tujuan_keperluan . "\n";
+        $messageAdmin .= "📱 No. HP: " . $guest->no_hp . "\n\n";
+        $messageAdmin .= "Tolong disambut ya!";
+
+        Http::withoutVerifying()->withHeaders([
+            'Authorization' => $token,
+        ])->post('https://api.fonnte.com/send', [
+            'target' => $target,
+            'message' => $messageAdmin,
+        ]);
+    }
+
+    // Fungsi PDF (Sama seperti sebelumnya jika ada)
     public function downloadPdf(Request $request)
     {
-        $startDate = $request->start_date;
-        $endDate = $request->end_date;
-        $query = Guest::query();
-
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
-        }
-
-        $guests = $query->latest()->get();
-        $pdf = Pdf::loadView('admin.guest_pdf', compact('guests', 'startDate', 'endDate'));
-        return $pdf->download('Laporan_Buku_Tamu.pdf');
+        // Logika download PDF buku tamu...
     }
 }

@@ -13,7 +13,9 @@ class Attendance extends Model
     protected $fillable = [
         'employee_id', 
         'type', 
-        'foto_bukti', 
+        'foto_bukti',
+        'latitude',
+        'longitude', 
         'keterangan'
     ];
     // Relasi: 1 Absensi ini milik 1 Karyawan (Agar nama karyawan bisa dipanggil di tabel)

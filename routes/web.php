@@ -7,13 +7,16 @@ use App\Models\LspSession;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\LspAttendance;
+use App\Models\Employee; // <-- Tambahan untuk fitur Cek Kehadiran
 
 // Import semua Controller yang dibutuhkan
+use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\AuthController;
+
 // ==========================================
 // RUTE LAYAR TERKUNCI (IJIN KELUAR)
 // ==========================================
@@ -79,6 +82,48 @@ Route::get('/buku-tamu-form', function () {
 Route::post('/buku-tamu/store', [GuestController::class, 'store']);
 
 // ==========================================
+// RUTE CEK KEHADIRAN PUBLIK (DIREKTORI KARYAWAN)
+// ==========================================
+Route::get('/cek-kehadiran', function (Request $request) {
+    $search = $request->input('search');
+    $today = Carbon::today();
+
+    // Ambil data karyawan beserta absennya KHUSUS HARI INI saja
+    $employees = Employee::with(['attendances' => function($query) use ($today) {
+        $query->whereDate('created_at', $today)->orderBy('created_at', 'desc');
+    }])
+    ->when($search, function($query, $search) {
+        return $query->where('nama_lengkap', 'like', "%{$search}%");
+    })
+    ->get();
+
+    // Logika penentuan status
+    foreach ($employees as $emp) {
+        $latestAbsen = $emp->attendances->first(); // Ambil absen paling terakhir hari ini
+
+        if (!$latestAbsen) {
+            $emp->status_kehadiran = 'Belum Hadir / Tidak di Tempat';
+            $emp->status_color = 'bg-gray-100 text-gray-600 border-gray-200';
+        } else {
+            $type = strtolower($latestAbsen->type);
+            if (str_contains($type, 'pulang')) {
+                $emp->status_kehadiran = 'Sudah Pulang';
+                $emp->status_color = 'bg-red-50 text-red-600 border-red-200';
+            } elseif (str_contains($type, 'ijin') || str_contains($type, 'leave')) {
+                $emp->status_kehadiran = 'Sedang Keluar Kantor';
+                $emp->status_color = 'bg-yellow-50 text-yellow-600 border-yellow-200';
+            } else {
+                // Jika terakhir 'Masuk' atau 'Kembali ke Kantor'
+                $emp->status_kehadiran = 'Ada di Kantor';
+                $emp->status_color = 'bg-green-50 text-green-600 border-green-200';
+            }
+        }
+    }
+
+    return view('cek_kehadiran', compact('employees', 'search'));
+});
+
+// ==========================================
 // RUTE LOGIN & LOGOUT
 // ==========================================
 Route::get('/login', function () {
@@ -120,10 +165,10 @@ Route::middleware(['auth'])->group(function () {
 // ==========================================
 Route::get('/generate-admin', function () {
     User::updateOrCreate(
-        ['email' => 'admin@digibar.com'],
+        ['username' => 'admin'], // Gunakan username sesuai sistem login Anda
         [
             'name' => 'Admin DigiBAR',
-            'password' => Hash::make('admin') 
+            'password' => Hash::make('password') 
         ]
     );
     return "Akun admin berhasil disiapkan! Silakan kembali ke halaman login.";
@@ -176,3 +221,19 @@ Route::delete('/admin/lsp/{id}', [AdminController::class, 'lspDestroy']);
 Route::get('/admin/lsp/{id}/download-pdf', [AdminController::class, 'downloadPdf']);
 Route::get('/admin/lsp/{id}/attendances', [AdminController::class, 'getAttendances']);
 Route::get('/admin/lsp/live-counts', [AdminController::class, 'getLiveCounts']);
+
+// ==========================================
+// RUTE SCANNER ABSENSI KANTOR (RFID)
+// ==========================================
+Route::get('/absen-kantor', [AttendanceController::class, 'rfidIndex'])->name('rfid.index');
+Route::post('/absen-kantor/scan', [AttendanceController::class, 'rfidProcess'])->name('rfid.process');
+
+// ==========================================
+// RUTE PENGAJUAN CUTI (UMUM & ADMIN)
+// ==========================================
+Route::get('/cuti', [LeaveController::class, 'create'])->name('cuti.create');
+Route::post('/cuti/store', [LeaveController::class, 'store'])->name('cuti.store');
+
+Route::get('/admin/cuti', [LeaveController::class, 'adminIndex'])->name('admin.cuti.index');
+Route::post('/admin/cuti/{id}/status', [LeaveController::class, 'updateStatus'])->name('admin.cuti.status');
+Route::post('/admin/cuti/{id}/resolve', [LeaveController::class, 'resolveSakitSementara']);
