@@ -124,6 +124,46 @@ Route::get('/cek-kehadiran', function (Request $request) {
 });
 
 // ==========================================
+// API UNTUK DATA LIVE KEHADIRAN (TANPA REFRESH)
+// ==========================================
+Route::get('/api/live-kehadiran', function () {
+    $today = \Carbon\Carbon::today();
+    $employees = \App\Models\Employee::with(['attendances' => function($query) use ($today) {
+        $query->whereDate('created_at', $today)->orderBy('created_at', 'desc');
+    }])->get();
+
+    $result = [];
+    foreach ($employees as $emp) {
+        $latestAbsen = $emp->attendances->first();
+        if (!$latestAbsen) {
+            $status = 'Belum Hadir';
+            $color = 'bg-gray-100 text-gray-500 border-gray-200';
+        } else {
+            $type = strtolower($latestAbsen->type);
+            if (str_contains($type, 'pulang')) {
+                $status = 'Sudah Pulang';
+                $color = 'bg-red-50 text-red-600 border-red-200';
+            } elseif (str_contains($type, 'ijin') || str_contains($type, 'leave')) {
+                $status = 'Sedang Keluar';
+                $color = 'bg-yellow-50 text-yellow-600 border-yellow-200';
+            } else {
+                $status = 'Ada di Kantor';
+                $color = 'bg-green-50 text-green-600 border-green-200';
+            }
+        }
+        
+        $result[] = [
+            'id' => $emp->id,
+            'nama_lengkap' => $emp->nama_lengkap,
+            'jabatan_posisi' => $emp->jabatan_posisi ?? 'Karyawan',
+            'status_kehadiran' => $status,
+            'status_color' => $color,
+        ];
+    }
+    return response()->json($result);
+});
+
+// ==========================================
 // RUTE LOGIN & LOGOUT
 // ==========================================
 Route::get('/login', function () {

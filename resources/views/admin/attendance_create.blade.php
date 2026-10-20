@@ -3,111 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelola Data Absensi | Admin DigiBAR</title>
+    <title>Kelola Data Absensi | Admin CatchTime</title>
     <link rel="icon" href="{{ asset('images/Logo_icon.png') }}" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .bg-animated-gradient {
-            background: linear-gradient(-45deg, #f8fafc, #fee2e2, #eff6ff, #f8fafc);
-            background-size: 400% 400%;
-            animation: gradientBG 12s ease infinite;
-        }
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        
+        /* Background Mint Halus Sesuai Mockup Dashboard */
+        .bg-dashboard-mint {
+            background-color: #e6f7f1;
         }
     </style>
 </head>
-<body class="bg-animated-gradient text-gray-800 font-sans selection:bg-red-500 selection:text-white" x-data="{ sidebarOpen: false, logoutModalOpen: false, detailAbsenOpen: false, absenData: {}, deleteModalOpen: false, deleteUrl: '', tab: 'kantor' }">
+<body class="bg-dashboard-mint text-gray-800 font-sans selection:bg-blue-600 selection:text-white" x-data="{ sidebarOpen: false, logoutModalOpen: false, detailAbsenOpen: false, absenData: {}, deleteModalOpen: false, deleteUrl: '', tab: 'kantor' }">
 
     <div class="flex h-screen overflow-hidden">
-        <!-- SIDEBAR -->
+        
+        <!-- SIDEBAR (Konsisten dengan Dashboard Overview) -->
         <aside 
             :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out border-r border-gray-100 flex flex-col h-full md:relative md:translate-x-0">
+            class="fixed inset-y-0 left-0 z-50 w-[260px] bg-white shadow-2xl transform transition-transform duration-300 ease-in-out border-r border-gray-100 flex flex-col h-full md:relative md:translate-x-0">
             
-            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h2 class="text-xl font-extrabold text-red-700 tracking-tight">DigiBAR MSDM</h2>
+            <div class="p-6 flex justify-between items-center">
+                <h2 class="text-2xl font-extrabold text-blue-800 tracking-tight">Menu</h2>
                 <button @click="sidebarOpen = false" class="md:hidden text-gray-400 hover:text-red-600 text-3xl font-bold transition-colors focus:outline-none">&times;</button>
             </div>
 
-            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                <a href="/admin/dashboard" class="block px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded-xl font-semibold transition-colors">
+            <nav class="flex-1 px-4 space-y-2 overflow-y-auto mt-2">
+                <!-- Menu Inaktif -->
+                <a href="/admin/dashboard" class="block px-4 py-3.5 text-gray-500 hover:bg-gray-50 hover:text-blue-700 rounded-xl font-semibold transition-colors text-base">
                     Dashboard Overview
                 </a>
-                <a href="/admin/karyawan" class="block px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded-xl font-semibold transition-colors">
+                <a href="/admin/karyawan" class="block px-4 py-3.5 text-gray-500 hover:bg-gray-50 hover:text-blue-700 rounded-xl font-semibold transition-colors text-base">
                     Data Karyawan
                 </a>
-                <a href="/admin/absensi" class="block px-4 py-3 bg-red-50 text-red-700 rounded-xl font-bold border-l-4 border-red-600 shadow-sm">
+                
+                <!-- Menu Aktif (Data Absensi) -->
+                <a href="/admin/absensi" class="block px-4 py-3.5 bg-[#f0f4ff] text-blue-700 rounded-xl font-bold border-l-[4px] border-blue-600 shadow-sm text-base">
                     Data Absensi
                 </a>
-                <a href="/admin/cuti" class="block px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded-xl font-semibold transition-colors flex justify-between items-center">
+                
+                <a href="/admin/cuti" class="block px-4 py-3.5 text-gray-500 hover:bg-gray-50 hover:text-blue-700 rounded-xl font-semibold transition-colors text-base">
                     Data Cuti
                 </a>
-                <a href="/admin/buku-tamu" class="block px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded-xl font-semibold transition-colors">
+                <a href="/admin/buku-tamu" class="block px-4 py-3.5 text-gray-500 hover:bg-gray-50 hover:text-blue-700 rounded-xl font-semibold transition-colors text-base">
                     Buku Tamu
                 </a>
             </nav>
 
-            <div class="p-4 border-t border-gray-100 mt-auto">
-                <button @click="logoutModalOpen = true" type="button" class="w-full flex items-center justify-center gap-3 px-4 py-3 text-red-600 bg-white border border-red-200 hover:bg-red-50 active:bg-red-100 rounded-xl transition-all duration-200 font-bold shadow-sm hover:shadow">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            <!-- Tombol Keluar Sistem -->
+            <div class="p-6 mt-auto">
+                <button @click="logoutModalOpen = true" type="button" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 bg-white border border-red-500 hover:bg-red-50 active:bg-red-100 rounded-xl transition-all duration-200 font-bold text-base">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
                     <span>Keluar Sistem</span>
                 </button>
             </div>
         </aside>
 
-        <!-- OVERLAY GELAP -->
+        <!-- OVERLAY GELAP UNTUK MOBILE -->
         <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm md:hidden" x-transition.opacity style="display: none;"></div>
 
+        <!-- MAIN CONTENT AREA -->
         <main class="flex-1 overflow-y-auto w-full relative">
-            <div class="min-h-screen p-4 sm:p-6 md:p-8">
-                <div class="max-w-7xl mx-auto">
+            <div class="min-h-screen p-6 md:p-10">
+                <div class="max-w-6xl mx-auto">
                     
-                    <!-- HEADER TOP -->
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4 border-b border-gray-200/50 pb-4">
-                        <div class="flex items-center gap-3 sm:gap-5">
-                            <button @click="sidebarOpen = true" class="md:hidden p-2 -ml-2 text-gray-600 hover:bg-white hover:text-red-700 rounded-xl transition-colors shadow-sm bg-white/50 focus:outline-none">
-                                <svg class="w-7 h-7 sm:w-9 sm:h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                            </button>
-                            <img src="{{ asset('images/Logo_DigiBAR.png') }}" alt="Logo DigiBAR" class="h-10 sm:h-24 w-auto drop-shadow-sm">
-                            <div>
-                                <h1 class="text-xl sm:text-2xl md:text-3xl font-extrabold text-red-900 tracking-tight">
-                                    DigiBAR Group <span class="block sm:inline font-medium text-gray-500 text-sm sm:text-base md:text-lg">| (Human Resource Management)</span>
-                                </h1>
-                                <p class="text-gray-500 text-xs sm:text-sm mt-0.5 font-medium">Digital Attendance and Guest Book</p>
-                            </div>
+                    <!-- TOP BRANDING (Konsisten dengan Dashboard Overview) -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-10 border-b border-gray-200/50 pb-4">
+                        <button @click="sidebarOpen = true" class="md:hidden p-2 -ml-2 text-gray-600 hover:bg-white hover:text-blue-700 rounded-xl transition-colors shadow-sm bg-white/50 focus:outline-none">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+
+                        <img src="{{ asset('images/Logo_DigiBAR.png') }}" alt="Logo DigiBAR" class="h-16 sm:h-20 md:h-24 w-auto drop-shadow-sm">
+                        
+                        <div class="mt-2 sm:mt-0 flex-1">
+                            <h1 class="text-2xl sm:text-3xl md:text-4xl font-black text-red-800 tracking-tight flex flex-wrap items-baseline gap-2">
+                                DigiBAR Group <span class="font-medium text-gray-500 text-base sm:text-lg md:text-xl">| (Human Resource Management)</span>
+                            </h1>
+                            <p class="text-gray-500 text-sm sm:text-base md:text-lg font-bold mt-1">Digital Attendance and Guest Book</p>
                         </div>
                     </div>
 
                     <!-- HEADER PAGE TITLE -->
                     <header class="flex flex-col md:flex-row md:justify-between md:items-end mb-8 gap-4 mt-4">
                         <div>
-                            <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900">Data Absensi</h1>
-                            <p class="text-gray-500 mt-1 font-medium">Catat kehadiran masuk dan pulang karyawan.</p>
+                            <h1 class="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Data Absensi</h1>
+                            <p class="text-gray-500 mt-2 font-medium text-base">Catat kehadiran masuk dan pulang karyawan secara real-time.</p>
                         </div>
-                        <div class="hidden sm:flex items-center gap-2 text-xs font-bold text-green-700 bg-green-100/80 backdrop-blur-sm px-4 py-2 rounded-full border border-green-200 shadow-sm">
-                            <span class="relative flex h-2.5 w-2.5">
+                        <div class="hidden sm:flex items-center gap-2 text-xs font-bold text-green-700 bg-white/60 backdrop-blur-sm px-5 py-2.5 rounded-full border border-green-200 shadow-sm">
+                            <span class="relative flex h-3 w-3">
                               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                             </span>
                             Live Update Aktif
                         </div>
                     </header>
 
                     @if(session('success'))
-                        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-2xl relative mb-6 shadow-sm flex items-center gap-3">
+                        <div class="bg-white border-l-4 border-green-500 text-green-700 p-4 rounded-xl shadow-sm flex items-center gap-3 mb-6">
                             <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                             <span class="block sm:inline text-sm font-semibold">{{ session('success') }}</span>
                         </div>
                     @endif
 
                     @if(session('error'))
-                        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl relative mb-6 shadow-sm flex items-center gap-3">
+                        <div class="bg-white border-l-4 border-red-500 text-red-700 p-4 rounded-xl shadow-sm flex items-center gap-3 mb-6">
                             <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                             <div>
                                 <strong class="font-extrabold">Gagal! </strong>
@@ -117,21 +123,21 @@
                     @endif
 
                     <!-- Filter dan Download PDF -->
-                    <div class="bg-white/90 backdrop-blur-md p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row items-end justify-between gap-4">
+                    <div class="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row items-end justify-between gap-4">
                         <form action="/admin/absensi" method="GET" class="flex flex-col md:flex-row items-end gap-4 w-full">
                             <div class="w-full md:w-auto">
                                 <label class="block text-gray-500 text-xs font-bold mb-2 uppercase tracking-wider">Dari Tanggal</label>
-                                <input type="date" name="start_date" value="{{ $startDate ?? '' }}" class="w-full px-4 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500">
+                                <input type="date" name="start_date" value="{{ $startDate ?? '' }}" class="w-full px-4 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div class="w-full md:w-auto">
                                 <label class="block text-gray-500 text-xs font-bold mb-2 uppercase tracking-wider">Sampai Tanggal</label>
-                                <input type="date" name="end_date" value="{{ $endDate ?? '' }}" class="w-full px-4 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-500">
+                                <input type="date" name="end_date" value="{{ $endDate ?? '' }}" class="w-full px-4 py-2.5 border border-gray-200 bg-gray-50 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500">
                             </div>
                             <div class="flex gap-3 w-full md:w-auto">
-                                <button type="submit" class="flex-1 md:flex-none bg-gray-800 hover:bg-gray-900 text-white px-8 py-2.5 rounded-xl text-sm transition font-bold shadow-md">Filter</button>
+                                <button type="submit" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white px-8 py-2.5 rounded-xl text-sm transition font-bold shadow-md">Filter</button>
                                 @if($startDate && $endDate)
-                                <a href="/admin/absensi/download-pdf?start_date={{ $startDate }}&end_date={{ $endDate }}" class="flex-1 md:flex-none bg-red-600 hover:bg-red-700 hover:-translate-y-0.5 text-white px-6 py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2 font-bold shadow-lg shadow-red-200">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <a href="/admin/absensi/download-pdf?start_date={{ $startDate }}&end_date={{ $endDate }}" class="flex-1 md:flex-none bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 px-6 py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2 font-bold shadow-sm">
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                     Cetak PDF
                                 </a>
                                 @endif
@@ -142,13 +148,13 @@
                     <!-- TAB NAVIGASI -->
                     <div class="flex gap-6 border-b border-gray-200 mb-6 overflow-x-auto pb-1" id="wadah-tabel-absensi">
                         <button @click="tab = 'kantor'" 
-                                :class="tab === 'kantor' ? 'border-red-600 text-red-600' : 'border-transparent text-gray-500 hover:text-gray-700'" 
-                                class="pb-3 border-b-4 font-extrabold text-sm md:text-base transition px-2 whitespace-nowrap flex items-center gap-2">
+                                :class="tab === 'kantor' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700'" 
+                                class="pb-3 border-b-[3px] font-extrabold text-sm md:text-base transition px-2 whitespace-nowrap flex items-center gap-2">
                             🏢 Absensi Kantor (RFID)
                         </button>
                         <button @click="tab = 'lapangan'" 
-                                :class="tab === 'lapangan' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'" 
-                                class="pb-3 border-b-4 font-extrabold text-sm md:text-base transition px-2 whitespace-nowrap flex items-center gap-2">
+                                :class="tab === 'lapangan' ? 'border-blue-600 text-blue-700' : 'border-transparent text-gray-500 hover:text-gray-700'" 
+                                class="pb-3 border-b-[3px] font-extrabold text-sm md:text-base transition px-2 whitespace-nowrap flex items-center gap-2">
                             📍 Absensi Lapangan (Web/GPS)
                         </button>
                     </div>
@@ -157,20 +163,20 @@
                         <!-- ================================
                              TAB 1: ABSENSI KANTOR (RFID)
                         ================================= -->
-                        <div x-show="tab === 'kantor'" class="bg-white/90 backdrop-blur-md rounded-3xl shadow-sm border border-gray-100 overflow-hidden" style="display: none;" x-transition>
-                            <div class="p-5 border-b border-gray-100 bg-red-50/50">
-                                <h2 class="text-sm font-extrabold text-red-800 uppercase tracking-widest">Riwayat Tap Kartu</h2>
+                        <div x-show="tab === 'kantor'" class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden" style="display: none;" x-transition>
+                            <div class="p-6 border-b border-gray-100">
+                                <h2 class="text-sm font-extrabold text-gray-900 uppercase tracking-widest">Riwayat Tap Kartu</h2>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse min-w-[800px]">
                                     <thead>
-                                        <tr class="bg-gray-50/80 text-gray-500 text-[10px] md:text-xs uppercase tracking-widest border-b border-gray-100 font-bold">
-                                            <th class="p-4 pl-6">No</th>
-                                            <th class="p-4">Waktu</th>
-                                            <th class="p-4">Nama Karyawan</th>
-                                            <th class="p-4">Jenis Absen</th>
-                                            <th class="p-4">Status</th>
-                                            <th class="p-4 text-center pr-6">Aksi</th>
+                                        <tr class="bg-gray-50/50 text-gray-500 text-[10px] md:text-xs uppercase tracking-widest border-b border-gray-100 font-bold">
+                                            <th class="p-5 pl-6">No</th>
+                                            <th class="p-5">Waktu</th>
+                                            <th class="p-5">Nama Karyawan</th>
+                                            <th class="p-5">Jenis Absen</th>
+                                            <th class="p-5">Status</th>
+                                            <th class="p-5 text-center pr-6">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-sm">
@@ -204,27 +210,27 @@
                                                 $badgeColor = 'bg-teal-50 text-teal-700 border-teal-200';
                                             }
                                         @endphp
-                                            <tr class="hover:bg-red-50/30 border-b border-gray-50 transition-colors">
-                                                <td class="p-4 pl-6 text-xs text-gray-400 font-medium">{{ $index + 1 }}</td>
-                                                <td class="p-4 whitespace-nowrap">
+                                            <tr class="hover:bg-blue-50/30 border-b border-gray-50 transition-colors">
+                                                <td class="p-5 pl-6 text-xs text-gray-400 font-medium">{{ $index + 1 }}</td>
+                                                <td class="p-5 whitespace-nowrap">
                                                     <div class="font-bold text-gray-900">{{ $absen->created_at->format('d/m/y') }}</div>
-                                                    <div class="text-xs font-bold text-red-600 mt-0.5">{{ $absen->created_at->format('H:i') }} WIB</div>
+                                                    <div class="text-xs font-bold text-blue-600 mt-0.5">{{ $absen->created_at->format('H:i') }} WIB</div>
                                                 </td>
-                                                <td class="p-4">
+                                                <td class="p-5">
                                                     <div class="font-extrabold text-gray-900">{{ $absen->employee->nama_lengkap ?? 'Dihapus' }}</div>
                                                     <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">{{ $absen->employee->jabatan_posisi ?? '-' }}</div>
                                                 </td>
-                                                <td class="p-4">
-                                                    <span class="bg-gray-100/80 text-gray-700 text-[10px] font-extrabold px-2.5 py-1 rounded-md border border-gray-200 uppercase tracking-wider">
+                                                <td class="p-5">
+                                                    <span class="bg-gray-100 text-gray-700 text-[10px] font-extrabold px-2.5 py-1.5 rounded-md border border-gray-200 uppercase tracking-wider">
                                                         {{ $absen->type }}
                                                     </span>
                                                 </td>
-                                                <td class="p-4">
-                                                    <span class="{{ $badgeColor }} text-[10px] font-extrabold px-2.5 py-1 rounded-md border uppercase tracking-wider">
+                                                <td class="p-5">
+                                                    <span class="{{ $badgeColor }} text-[10px] font-extrabold px-2.5 py-1.5 rounded-md border uppercase tracking-wider">
                                                         {{ $statusWaktu }}
                                                     </span>
                                                 </td>
-                                                <td class="p-4 pr-6 text-center">
+                                                <td class="p-5 pr-6 text-center">
                                                     <button type="button" 
                                                         @click="deleteUrl = '/admin/absensi/{{ $absen->id }}'; deleteModalOpen = true"
                                                         class="text-red-500 hover:text-red-700 font-extrabold text-xs uppercase tracking-wider transition">
@@ -245,23 +251,23 @@
                         <!-- ================================
                              TAB 2: ABSENSI LAPANGAN (WEB)
                         ================================= -->
-                        <div x-show="tab === 'lapangan'" class="bg-white/90 backdrop-blur-md rounded-3xl shadow-sm border border-gray-100 overflow-hidden" style="display: none;" x-transition>
-                            <div class="p-5 border-b border-gray-100 bg-blue-50/50 flex justify-between items-center">
-                                <h2 class="text-sm font-extrabold text-blue-800 uppercase tracking-widest">Riwayat WFA / GPS</h2>
+                        <div x-show="tab === 'lapangan'" class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden" style="display: none;" x-transition>
+                            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                                <h2 class="text-sm font-extrabold text-gray-900 uppercase tracking-widest">Riwayat WFA / GPS</h2>
                                 
                                 <!-- FORM INPUT MANUAL (Disembunyikan di Tab Kantor) -->
-                                <button onclick="document.getElementById('formManual').classList.toggle('hidden')" class="bg-white border border-blue-200 text-blue-600 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-blue-100 transition shadow-sm">
+                                <button onclick="document.getElementById('formManual').classList.toggle('hidden')" class="bg-white border border-blue-200 text-blue-600 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-blue-50 transition shadow-sm">
                                     + Input Manual
                                 </button>
                             </div>
 
                             <!-- Form Manual (Hidden by default) -->
-                            <div id="formManual" class="p-6 bg-blue-50/30 border-b border-blue-100 hidden">
+                            <div id="formManual" class="p-6 bg-blue-50/50 border-b border-blue-100 hidden">
                                 <form action="/admin/absensi/store" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
                                         <div>
-                                            <select name="employee_id" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-xs font-bold" required>
+                                            <select name="employee_id" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-xs font-bold" required>
                                                 <option value="">-- Karyawan --</option>
                                                 @foreach($employees as $emp)
                                                     <option value="{{ $emp->id }}">{{ $emp->nama_lengkap }}</option>
@@ -269,7 +275,7 @@
                                             </select>
                                         </div>
                                         <div>
-                                            <div class="flex gap-4 p-2 bg-white rounded-xl border border-gray-200 h-[34px] items-center text-xs">
+                                            <div class="flex gap-4 p-2 bg-white rounded-xl border border-gray-200 h-[38px] items-center text-xs">
                                                 <label class="inline-flex items-center cursor-pointer">
                                                     <input type="radio" name="type" value="Masuk" class="form-radio text-blue-600 focus:ring-blue-500 w-3 h-3" checked>
                                                     <span class="ml-2 font-bold text-gray-700">Masuk</span>
@@ -281,11 +287,11 @@
                                             </div>
                                         </div>
                                         <div>
-                                            <input type="file" name="foto_bukti" accept="image/*" class="w-full px-4 py-1.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white text-xs font-bold" required>
+                                            <input type="file" name="foto_bukti" accept="image/*" class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white text-xs font-bold" required>
                                         </div>
                                     </div>
                                     <div class="flex justify-end">
-                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-xl text-xs transition-all shadow-md shadow-blue-200">
+                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl text-xs transition-all shadow-md shadow-blue-200">
                                             Simpan Absensi Manual
                                         </button>
                                     </div>
@@ -295,12 +301,12 @@
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left border-collapse min-w-[800px]">
                                     <thead>
-                                        <tr class="bg-gray-50/80 text-gray-500 text-[10px] md:text-xs uppercase tracking-widest border-b border-gray-100 font-bold">
-                                            <th class="p-4 pl-6">No</th>
-                                            <th class="p-4">Waktu</th>
-                                            <th class="p-4">Nama Karyawan</th>
-                                            <th class="p-4">Jenis Absen</th>
-                                            <th class="p-4 text-center pr-6">Aksi Detail & Hapus</th>
+                                        <tr class="bg-gray-50/50 text-gray-500 text-[10px] md:text-xs uppercase tracking-widest border-b border-gray-100 font-bold">
+                                            <th class="p-5 pl-6">No</th>
+                                            <th class="p-5">Waktu</th>
+                                            <th class="p-5">Nama Karyawan</th>
+                                            <th class="p-5">Jenis Absen</th>
+                                            <th class="p-5 text-center pr-6">Aksi Detail & Hapus</th>
                                         </tr>
                                     </thead>
                                     <tbody class="text-sm">
@@ -312,21 +318,21 @@
                                             }
                                         @endphp
                                             <tr class="hover:bg-blue-50/30 border-b border-gray-50 transition-colors">
-                                                <td class="p-4 pl-6 text-xs text-gray-400 font-medium">{{ $index + 1 }}</td>
-                                                <td class="p-4 whitespace-nowrap">
+                                                <td class="p-5 pl-6 text-xs text-gray-400 font-medium">{{ $index + 1 }}</td>
+                                                <td class="p-5 whitespace-nowrap">
                                                     <div class="font-bold text-gray-900">{{ $absen->created_at->format('d/m/y') }}</div>
                                                     <div class="text-xs font-bold text-blue-600 mt-0.5">{{ $absen->created_at->format('H:i') }} WIB</div>
                                                 </td>
-                                                <td class="p-4">
+                                                <td class="p-5">
                                                     <div class="font-extrabold text-gray-900">{{ $absen->employee->nama_lengkap ?? 'Dihapus' }}</div>
                                                     <div class="text-[10px] font-bold text-gray-500 uppercase tracking-wide mt-0.5">{{ $absen->employee->jabatan_posisi ?? '-' }}</div>
                                                 </td>
-                                                <td class="p-4">
-                                                    <span class="bg-gray-100/80 text-gray-700 text-[10px] font-extrabold px-2.5 py-1 rounded-md border border-gray-200 uppercase tracking-wider">
+                                                <td class="p-5">
+                                                    <span class="bg-gray-100 text-gray-700 text-[10px] font-extrabold px-2.5 py-1.5 rounded-md border border-gray-200 uppercase tracking-wider">
                                                         {{ $absen->type }}
                                                     </span>
                                                 </td>
-                                                <td class="p-4 pr-6 text-center">
+                                                <td class="p-5 pr-6 text-center">
                                                     <div class="flex items-center justify-center gap-3">
                                                         <button 
                                                             @click="absenData = {
@@ -335,7 +341,7 @@
                                                                 waktu: '{{ $absen->created_at->format('d M Y, H:i') }} WIB',
                                                                 tipe: '{{ $absen->type }}',
                                                                 status: 'Absen Lapangan',
-                                                                statusWarna: 'bg-blue-50 text-blue-700',
+                                                                statusWarna: 'bg-blue-50 text-blue-700 border-blue-200',
                                                                 foto: '{{ $urlFoto }}',
                                                                 keterangan: {{ json_encode($absen->keterangan ?? '') }},
                                                                 lat: '{{ $absen->latitude ?? '' }}',
@@ -402,9 +408,9 @@
                 </div>
                 
                 <div class="space-y-4">
-                    <div class="flex justify-between items-center bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                    <div class="flex justify-between items-center bg-blue-50 p-4 rounded-2xl border border-blue-100">
                         <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Waktu Rekam</span>
-                        <span class="text-sm font-extrabold text-blue-600" x-text="absenData.waktu"></span>
+                        <span class="text-sm font-extrabold text-blue-700" x-text="absenData.waktu"></span>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
@@ -421,8 +427,8 @@
                     <div class="mt-5" x-show="absenData.lat !== '' && absenData.lng !== ''">
                         <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Lokasi Koordinat GPS</span>
                         <a :href="'https://www.google.com/maps?q=' + absenData.lat + ',' + absenData.lng" 
-                           target="_blank" 
-                           class="flex items-center justify-center gap-2 w-full bg-blue-50 hover:bg-blue-100 hover:-translate-y-0.5 border border-blue-200 text-blue-700 text-sm font-bold py-3 rounded-xl transition-all shadow-sm">
+                            target="_blank" 
+                            class="flex items-center justify-center gap-2 w-full bg-white hover:bg-blue-50 hover:-translate-y-0.5 border border-gray-200 hover:border-blue-300 text-blue-600 text-sm font-bold py-3 rounded-xl transition-all shadow-sm">
                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                            Buka di Google Maps
                         </a>
@@ -430,7 +436,7 @@
 
                     <div class="mt-5" x-show="absenData.keterangan !== '' && absenData.keterangan !== null">
                         <span class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Keterangan / Alasan</span>
-                        <div class="bg-yellow-50/80 text-yellow-800 text-sm px-4 py-3 rounded-xl border border-yellow-200 font-medium" x-text="absenData.keterangan"></div>
+                        <div class="bg-gray-50 text-gray-800 text-sm px-4 py-3 rounded-xl border border-gray-200 font-medium" x-text="absenData.keterangan"></div>
                     </div>
                 </div>
             </div>

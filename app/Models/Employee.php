@@ -24,4 +24,8 @@ class Employee extends Model
     {
         return $this->hasMany(LeaveRequest::class);
     }
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
 }

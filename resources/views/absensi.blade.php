@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absen WFA / Lapangan | DigiBAR</title>
+    <title>Absen WFA / Lapangan | CatchTime</title>
     <link rel="icon" href="{{ asset('images/Logo_icon.png') }}" type="image/png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -11,24 +11,27 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .bg-animated-gradient {
-            background: linear-gradient(-45deg, #f8fafc, #fee2e2, #eff6ff, #f8fafc);
+        
+        /* Animasi Background Gradient Biru Halus khas CatchTime */
+        .bg-catchtime-gradient {
+            background: linear-gradient(-45deg, #e8f0fe, #d4e3fc, #f4f7fc, #eef3fb);
             background-size: 400% 400%;
-            animation: gradientBG 12s ease infinite;
+            animation: gradientBG 15s ease infinite;
         }
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
+        
         /* Efek kamera terbalik (seperti cermin) */
         video { transform: scaleX(-1); }
     </style>
 </head>
-<body class="bg-animated-gradient text-gray-800 min-h-screen flex flex-col items-center justify-center p-4 relative" x-data="remoteAbsen()" x-init="initApp()">
+<body class="bg-catchtime-gradient text-gray-800 min-h-screen flex flex-col items-center justify-center p-4 relative" x-data="remoteAbsen()" x-init="initApp()">
 
     <!-- Tombol Kembali -->
-    <a href="/" class="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors bg-white/70 px-5 py-2.5 border border-gray-200 shadow-sm rounded-full backdrop-blur-md font-bold text-sm z-40">
+    <a href="/" class="absolute top-6 left-6 flex items-center gap-2 text-gray-600 hover:text-[#0033a0] transition-colors bg-white/70 px-5 py-2.5 border border-gray-200 shadow-sm rounded-full backdrop-blur-md font-bold text-sm z-40">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
         <span class="hidden sm:inline">Kembali ke Menu</span>
     </a>
@@ -37,7 +40,7 @@
     <div class="relative z-10 w-full max-w-lg bg-white/90 backdrop-blur-md p-6 sm:p-8 rounded-3xl shadow-xl border border-gray-100 mt-12 sm:mt-0">
         
         <div class="text-center mb-6">
-            <h1 class="text-2xl font-extrabold text-gray-900 mb-1">Absensi Jarak Jauh</h1>
+            <h1 class="text-2xl font-extrabold text-[#0033a0] mb-1">Absensi Jarak Jauh</h1>
             <p class="text-sm text-gray-500 font-medium">Sistem Auto-Snap & Konfirmasi Lokasi GPS</p>
         </div>
 
@@ -47,7 +50,7 @@
             <!-- Pilih Karyawan -->
             <div class="mb-4">
                 <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Pilih Nama Anda</label>
-                <select name="employee_id" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-red-500 font-semibold text-gray-700 appearance-none">
+                <select name="employee_id" required class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0033a0] font-semibold text-gray-700 appearance-none">
                     <option value="">-- Ketuk untuk memilih --</option>
                     @foreach($employees as $emp)
                         <option value="{{ $emp->id }}">{{ $emp->nama_lengkap }}</option>
@@ -63,7 +66,7 @@
                     <!-- Opsi Masuk -->
                     <label class="cursor-pointer group">
                         <input type="radio" name="type" value="Masuk" class="peer sr-only" required>
-                        <div class="p-3 border-2 border-gray-200 rounded-xl peer-checked:border-red-500 peer-checked:bg-red-50 text-gray-400 peer-checked:text-red-500 hover:bg-gray-50 hover:text-red-400 transition-all text-center h-full flex flex-col justify-center shadow-sm">
+                        <div class="p-3 border-2 border-gray-200 rounded-xl peer-checked:border-[#0033a0] peer-checked:bg-blue-50 text-gray-400 peer-checked:text-[#0033a0] hover:bg-gray-50 hover:text-blue-500 transition-all text-center h-full flex flex-col justify-center shadow-sm">
                             <svg class="w-8 h-8 mx-auto mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <!-- Icon Login / Masuk -->
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -75,7 +78,7 @@
                     <!-- Opsi Pulang -->
                     <label class="cursor-pointer group">
                         <input type="radio" name="type" value="Pulang" class="peer sr-only" required>
-                        <div class="p-3 border-2 border-gray-200 rounded-xl peer-checked:border-red-500 peer-checked:bg-red-50 text-gray-400 peer-checked:text-red-500 hover:bg-gray-50 hover:text-red-400 transition-all text-center h-full flex flex-col justify-center shadow-sm">
+                        <div class="p-3 border-2 border-gray-200 rounded-xl peer-checked:border-[#0033a0] peer-checked:bg-blue-50 text-gray-400 peer-checked:text-[#0033a0] hover:bg-gray-50 hover:text-blue-500 transition-all text-center h-full flex flex-col justify-center shadow-sm">
                             <svg class="w-8 h-8 mx-auto mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <!-- Icon Logout / Pulang -->
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -94,7 +97,7 @@
                     
                     <!-- Indikator Loading Kamera -->
                     <div x-show="!cameraReady && !photoTaken" class="text-gray-400 text-sm font-semibold flex flex-col items-center">
-                        <svg class="animate-spin h-6 w-6 mb-2 text-red-500" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <svg class="animate-spin h-6 w-6 mb-2 text-[#0033a0]" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         Menyiapkan Kamera...
                     </div>
 
@@ -112,7 +115,7 @@
                     <!-- Indikator Teks di Bawah -->
                     <div class="absolute bottom-4 left-0 right-0 flex justify-center z-30" x-show="cameraReady && !photoTaken">
                         <div class="bg-black/60 text-white px-4 py-2 rounded-full text-xs font-bold backdrop-blur-sm shadow-lg">
-                            Otomatis mengambil foto dalam <span x-text="countdown" class="text-red-400 text-base ml-1"></span>
+                            Otomatis mengambil foto dalam <span x-text="countdown" class="text-blue-400 text-base ml-1"></span>
                         </div>
                     </div>
 
@@ -148,7 +151,7 @@
             <!-- Submit Button -->
             <button type="submit" :disabled="!photoTaken || !locationReady || isSubmitting" 
                     class="w-full text-white font-bold py-3.5 rounded-xl transition-all shadow-lg flex justify-center items-center gap-2"
-                    :class="(!photoTaken || !locationReady || isSubmitting) ? 'bg-gray-300 cursor-not-allowed shadow-none' : 'bg-red-600 hover:bg-red-700 shadow-red-200 hover:-translate-y-0.5'">
+                    :class="(!photoTaken || !locationReady || isSubmitting) ? 'bg-gray-300 cursor-not-allowed shadow-none' : 'bg-[#0033a0] hover:bg-blue-800 shadow-blue-200 hover:-translate-y-0.5'">
                 <span x-show="!isSubmitting">Kirim Absensi Saya</span>
                 <span x-show="isSubmitting">Memproses...</span>
             </button>
@@ -158,27 +161,27 @@
     <!-- MODAL CONFETTI (Berhasil Absen) -->
     <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4" x-transition.opacity.duration.300ms style="display: none;">
         <div class="bg-white text-gray-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden transform transition-all text-center p-8 border-4"
-             :class="tipeAbsen === 'Masuk' ? 'border-green-400' : 'border-blue-400'"
+             :class="tipeAbsen === 'Masuk' ? 'border-[#0033a0]' : 'border-blue-400'"
              x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-90 translate-y-8" x-transition:enter-end="opacity-100 scale-100 translate-y-0">
             
-            <div class="w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6" :class="tipeAbsen === 'Masuk' ? 'bg-green-100 text-green-500' : 'bg-blue-100 text-blue-500'">
+            <div class="w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6" :class="tipeAbsen === 'Masuk' ? 'bg-blue-100 text-[#0033a0]' : 'bg-blue-100 text-blue-500'">
                 <svg x-show="tipeAbsen === 'Masuk'" class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                 <svg x-show="tipeAbsen === 'Pulang'" class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
             </div>
 
             <div x-show="tipeAbsen === 'Masuk'">
-                <h2 class="text-2xl font-extrabold text-gray-900 mb-2">Halo, <span class="text-green-600" x-text="namaKaryawan"></span>! 👋</h2>
+                <h2 class="text-2xl font-extrabold text-gray-900 mb-2">Halo, <span class="text-[#0033a0]" x-text="namaKaryawan"></span>! 👋</h2>
                 <p class="text-gray-500 text-lg leading-relaxed">Selamat bekerja. Semangat terus kerjanya hari ini, mari ciptakan hal-hal hebat!</p>
             </div>
 
             <div x-show="tipeAbsen === 'Pulang'">
-                <h2 class="text-2xl font-extrabold text-gray-900 mb-2">Kerja Bagus, <span class="text-blue-600" x-text="namaKaryawan"></span>! 🎉</h2>
+                <h2 class="text-2xl font-extrabold text-gray-900 mb-2">Kerja Bagus, <span class="text-[#0033a0]" x-text="namaKaryawan"></span>! 🎉</h2>
                 <p class="text-gray-500 text-lg leading-relaxed">Yeayy akhirnya pulang juga! Kerja keras yang luar biasa hari ini. Jangan lupa istirahat yang cukup dan makan ya.</p>
             </div>
 
             <div class="mt-8 bg-gray-50 py-3 rounded-xl border border-gray-100">
                 <span class="text-sm font-bold text-gray-400 uppercase tracking-widest">Status: </span>
-                <span class="text-sm font-extrabold uppercase tracking-widest" :class="tipeAbsen === 'Masuk' ? 'text-green-600' : 'text-blue-600'" x-text="'ABSEN ' + tipeAbsen + ' BERHASIL'"></span>
+                <span class="text-sm font-extrabold uppercase tracking-widest" :class="tipeAbsen === 'Masuk' ? 'text-[#0033a0]' : 'text-blue-600'" x-text="'ABSEN ' + tipeAbsen + ' BERHASIL'"></span>
             </div>
         </div>
     </div>
@@ -324,12 +327,12 @@
 
                 triggerConfetti() {
                     if (this.tipeAbsen === 'Masuk') {
-                        confetti({ particleCount: 150, spread: 80, origin: { y: 0.8 }, colors: ['#4ade80', '#22c55e', '#ffffff'] });
+                        confetti({ particleCount: 150, spread: 80, origin: { y: 0.8 }, colors: ['#0033a0', '#3b82f6', '#ffffff'] });
                     } else {
                         var end = Date.now() + 3000;
                         (function frame() {
-                            confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#60A5FA', '#F87171', '#FBBF24'] });
-                            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#60A5FA', '#F87171', '#FBBF24'] });
+                            confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#0033a0', '#3b82f6', '#ffffff'] });
+                            confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#0033a0', '#3b82f6', '#ffffff'] });
                             if (Date.now() < end) requestAnimationFrame(frame);
                         }());
                     }
