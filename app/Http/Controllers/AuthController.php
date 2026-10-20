@@ -18,13 +18,13 @@ class AuthController extends Controller
         ]);
 
         // 2. Cek apakah akun default 'digibar-demo' sudah ada di database, jika belum buatkan otomatis
-        $user = User::where('username', 'digibar-demo')->first();
+        $user = User::where('username', 'admincatchtime')->first();
 
         if (!$user) {
             $user = new User();
             $user->name = 'Admin CatchTime';
-            $user->username = 'digibar-demo';
-            $user->password = Hash::make('demo123');
+            $user->username = 'admincatchtime';
+            $user->password = Hash::make('catchtime123');
             $user->save();
         }
 
