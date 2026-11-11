@@ -386,6 +386,7 @@ class AttendanceController extends Controller
                         $leaveMinutes = $totalMinutes;
                     }
 
+                    // PERBAIKAN LOGIKA PENGURANGAN ADA DI SINI
                     $netMinutes = $totalMinutes - $leaveMinutes;
                     if ($netMinutes < 0) $netMinutes = 0; 
 
