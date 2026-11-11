@@ -304,10 +304,13 @@ class AttendanceController extends Controller
         }
 
         $reportData = [];
+        $activeShift = []; // Menyimpan memori shift yang sedang berjalan
 
         foreach ($attendances as $absen) {
-            $date = $absen->created_at->format('Y-m-d');
             $empId = $absen->employee_id;
+            $time = clone $absen->created_at;
+            $typeLokal = strtolower($absen->type);
+            $calendarDate = $time->format('Y-m-d');
 
             if (!isset($reportData[$empId])) {
                 $reportData[$empId] = [
@@ -317,28 +320,64 @@ class AttendanceController extends Controller
                 ];
             }
 
-            if (!isset($reportData[$empId]['harian'][$date])) {
-                $reportData[$empId]['harian'][$date] = [
-                    'tanggal_format' => $absen->created_at->format('d M Y'),
-                    'masuk' => null,
-                    'pulang' => null,
-                    'leave' => [],
-                    'kembali' => []
-                ];
-            }
-
-            $time = clone $absen->created_at;
-            $typeLokal = strtolower($absen->type);
-
             if ($typeLokal === 'masuk') {
-                $reportData[$empId]['harian'][$date]['masuk'] = $time;
-            } elseif ($typeLokal === 'pulang') {
-                $reportData[$empId]['harian'][$date]['pulang'] = $time;
-            } elseif (str_contains($typeLokal, 'kembali')) {
-                $reportData[$empId]['harian'][$date]['kembali'][] = $time;
-            } elseif (str_contains($typeLokal, 'ijin') || str_contains($typeLokal, 'leave')) {
-                $reportData[$empId]['harian'][$date]['leave'][] = $time;
+                // LOGIKA CERDAS: Jika ada absen "Masuk" baru, tapi shift kemarin masih menggantung (belum pulang)
+                if (isset($activeShift[$empId])) {
+                    $oldShiftKey = $activeShift[$empId];
+                    // Barulah sistem menutup otomatis shift kemarin di jam 23:59:59
+                    $autoCloseTime = \Carbon\Carbon::parse($oldShiftKey . ' 23:59:59');
+                    $reportData[$empId]['harian'][$oldShiftKey]['pulang'] = $autoCloseTime;
+                    $reportData[$empId]['harian'][$oldShiftKey]['is_auto_closed'] = true; // Tandai untuk PDF
+                }
+
+                // Buka sesi shift baru
+                $shiftKey = $calendarDate;
+                $activeShift[$empId] = $shiftKey;
+
+                if (!isset($reportData[$empId]['harian'][$shiftKey])) {
+                    $reportData[$empId]['harian'][$shiftKey] = [
+                        'tanggal_format' => $time->format('d M Y'),
+                        'masuk' => null,
+                        'pulang' => null,
+                        'leave' => [],
+                        'kembali' => [],
+                        'is_auto_closed' => false
+                    ];
+                }
+                $reportData[$empId]['harian'][$shiftKey]['masuk'] = $time;
+            } 
+            else {
+                // Jika Pulang/Ijin/Kembali, tempelkan ke Shift Masuk terakhir. 
+                $shiftKey = $activeShift[$empId] ?? $calendarDate;
+                
+                if (!isset($reportData[$empId]['harian'][$shiftKey])) {
+                    $reportData[$empId]['harian'][$shiftKey] = [
+                        'tanggal_format' => \Carbon\Carbon::parse($shiftKey)->format('d M Y'),
+                        'masuk' => null,
+                        'pulang' => null,
+                        'leave' => [],
+                        'kembali' => [],
+                        'is_auto_closed' => false
+                    ];
+                }
+
+                if ($typeLokal === 'pulang') {
+                    $reportData[$empId]['harian'][$shiftKey]['pulang'] = $time;
+                    // Shift normal berhasil ditutup (Bisa hari yang sama, bisa besok subuhnya)
+                    unset($activeShift[$empId]); 
+                } elseif (str_contains($typeLokal, 'kembali')) {
+                    $reportData[$empId]['harian'][$shiftKey]['kembali'][] = $time;
+                } elseif (str_contains($typeLokal, 'ijin') || str_contains($typeLokal, 'leave')) {
+                    $reportData[$empId]['harian'][$shiftKey]['leave'][] = $time;
+                }
             }
+        }
+
+        // Jaga-jaga: Jika di baris data paling terakhir masih ada shift yang belum ditutup
+        foreach ($activeShift as $empId => $shiftKey) {
+            $autoCloseTime = \Carbon\Carbon::parse($shiftKey . ' 23:59:59');
+            $reportData[$empId]['harian'][$shiftKey]['pulang'] = $autoCloseTime;
+            $reportData[$empId]['harian'][$shiftKey]['is_auto_closed'] = true;
         }
 
         foreach ($reportData as $empId => &$empData) {
@@ -350,17 +389,7 @@ class AttendanceController extends Controller
                     $masuk = \Carbon\Carbon::parse($dayData['masuk'])->startOfMinute();
                     $pulang = \Carbon\Carbon::parse($dayData['pulang'])->startOfMinute();
                     
-                    // -------------------------------------------------------------
-                    // PERBAIKAN FATAL: Mengatasi Waktu Mundur (Bug AM/PM Database)
-                    // -------------------------------------------------------------
-                    if ($pulang->lt($masuk)) {
-                        $pulang->addHours(12); // Tambah 12 jam agar menjadi sore (misal 05:16 jadi 17:16)
-                        $dayData['pulang'] = clone $pulang; // Perbaiki juga angkanya di tabel PDF
-                    }
-
-                    // Hitung selisih mutlak
                     $totalMinutes = $masuk->diffInMinutes($pulang, true);
-                    
                     $leaveMinutes = 0;
                     
                     $availableKembali = [];
@@ -403,7 +432,13 @@ class AttendanceController extends Controller
 
                     $hours = floor($netMinutes / 60);
                     $minutes = $netMinutes % 60;
-                    $dayData['total_jam_text'] = $hours . ' Jam ' . $minutes . ' Menit';
+                    
+                    // PENAMBAHAN KETERANGAN OTOMATIS
+                    if ($dayData['is_auto_closed']) {
+                        $dayData['total_jam_text'] = $hours . ' Jam ' . $minutes . ' Menit (Ditutup Otomatis, Lupa Absen Pulang)';
+                    } else {
+                        $dayData['total_jam_text'] = $hours . ' Jam ' . $minutes . ' Menit';
+                    }
                     
                     if ($leaveMinutes > 0) {
                         $leaveH = floor($leaveMinutes / 60);
