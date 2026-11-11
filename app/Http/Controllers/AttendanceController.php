@@ -304,7 +304,7 @@ class AttendanceController extends Controller
         }
 
         $reportData = [];
-        $activeShift = []; // Menyimpan memori shift yang sedang berjalan
+        $activeShift = []; 
 
         foreach ($attendances as $absen) {
             $empId = $absen->employee_id;
@@ -321,16 +321,13 @@ class AttendanceController extends Controller
             }
 
             if ($typeLokal === 'masuk') {
-                // LOGIKA CERDAS: Jika ada absen "Masuk" baru, tapi shift kemarin masih menggantung (belum pulang)
                 if (isset($activeShift[$empId])) {
                     $oldShiftKey = $activeShift[$empId];
-                    // Barulah sistem menutup otomatis shift kemarin di jam 23:59:59
                     $autoCloseTime = \Carbon\Carbon::parse($oldShiftKey . ' 23:59:59');
                     $reportData[$empId]['harian'][$oldShiftKey]['pulang'] = $autoCloseTime;
-                    $reportData[$empId]['harian'][$oldShiftKey]['is_auto_closed'] = true; // Tandai untuk PDF
+                    $reportData[$empId]['harian'][$oldShiftKey]['is_auto_closed'] = true; 
                 }
 
-                // Buka sesi shift baru
                 $shiftKey = $calendarDate;
                 $activeShift[$empId] = $shiftKey;
 
@@ -347,7 +344,6 @@ class AttendanceController extends Controller
                 $reportData[$empId]['harian'][$shiftKey]['masuk'] = $time;
             } 
             else {
-                // Jika Pulang/Ijin/Kembali, tempelkan ke Shift Masuk terakhir. 
                 $shiftKey = $activeShift[$empId] ?? $calendarDate;
                 
                 if (!isset($reportData[$empId]['harian'][$shiftKey])) {
@@ -363,7 +359,6 @@ class AttendanceController extends Controller
 
                 if ($typeLokal === 'pulang') {
                     $reportData[$empId]['harian'][$shiftKey]['pulang'] = $time;
-                    // Shift normal berhasil ditutup (Bisa hari yang sama, bisa besok subuhnya)
                     unset($activeShift[$empId]); 
                 } elseif (str_contains($typeLokal, 'kembali')) {
                     $reportData[$empId]['harian'][$shiftKey]['kembali'][] = $time;
@@ -373,11 +368,14 @@ class AttendanceController extends Controller
             }
         }
 
-        // Jaga-jaga: Jika di baris data paling terakhir masih ada shift yang belum ditutup
+        // PERBAIKAN: Cek hari ini, JANGAN TUTUP jika karyawan masih bekerja hari ini!
+        $hariIniStr = now()->timezone('Asia/Jakarta')->format('Y-m-d');
         foreach ($activeShift as $empId => $shiftKey) {
-            $autoCloseTime = \Carbon\Carbon::parse($shiftKey . ' 23:59:59');
-            $reportData[$empId]['harian'][$shiftKey]['pulang'] = $autoCloseTime;
-            $reportData[$empId]['harian'][$shiftKey]['is_auto_closed'] = true;
+            if ($shiftKey !== $hariIniStr) {
+                $autoCloseTime = \Carbon\Carbon::parse($shiftKey . ' 23:59:59');
+                $reportData[$empId]['harian'][$shiftKey]['pulang'] = $autoCloseTime;
+                $reportData[$empId]['harian'][$shiftKey]['is_auto_closed'] = true;
+            }
         }
 
         foreach ($reportData as $empId => &$empData) {
@@ -433,7 +431,6 @@ class AttendanceController extends Controller
                     $hours = floor($netMinutes / 60);
                     $minutes = $netMinutes % 60;
                     
-                    // PENAMBAHAN KETERANGAN OTOMATIS
                     if ($dayData['is_auto_closed']) {
                         $dayData['total_jam_text'] = $hours . ' Jam ' . $minutes . ' Menit (Ditutup Otomatis, Lupa Absen Pulang)';
                     } else {
@@ -449,7 +446,9 @@ class AttendanceController extends Controller
                     }
                     
                 } else {
-                    $dayData['total_jam_text'] = 'Data Tidak Lengkap (Lupa Absen)';
+                    // PERBAIKAN PESAN: Tampilan untuk hari ini yang belum pulang
+                    $isHariIni = ($date === $hariIniStr);
+                    $dayData['total_jam_text'] = $isHariIni ? 'Belum Absen Pulang (Sedang Bekerja)' : 'Data Tidak Lengkap (Lupa Absen)';
                     $dayData['durasi_ijin'] = '-';
                 }
             }
