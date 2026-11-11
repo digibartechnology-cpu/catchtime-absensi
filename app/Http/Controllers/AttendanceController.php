@@ -350,7 +350,17 @@ class AttendanceController extends Controller
                     $masuk = \Carbon\Carbon::parse($dayData['masuk'])->startOfMinute();
                     $pulang = \Carbon\Carbon::parse($dayData['pulang'])->startOfMinute();
                     
-                    $totalMinutes = $masuk->diffInMinutes($pulang);
+                    // -------------------------------------------------------------
+                    // PERBAIKAN FATAL: Mengatasi Waktu Mundur (Bug AM/PM Database)
+                    // -------------------------------------------------------------
+                    if ($pulang->lt($masuk)) {
+                        $pulang->addHours(12); // Tambah 12 jam agar menjadi sore (misal 05:16 jadi 17:16)
+                        $dayData['pulang'] = clone $pulang; // Perbaiki juga angkanya di tabel PDF
+                    }
+
+                    // Hitung selisih mutlak
+                    $totalMinutes = $masuk->diffInMinutes($pulang, true);
+                    
                     $leaveMinutes = 0;
                     
                     $availableKembali = [];
@@ -378,7 +388,7 @@ class AttendanceController extends Controller
                             if ($leaveEnd->gt($pulang)) {
                                 $leaveEnd = clone $pulang;
                             }
-                            $leaveMinutes += $leaveStart->diffInMinutes($leaveEnd);
+                            $leaveMinutes += $leaveStart->diffInMinutes($leaveEnd, true);
                         }
                     }
 
@@ -386,7 +396,6 @@ class AttendanceController extends Controller
                         $leaveMinutes = $totalMinutes;
                     }
 
-                    // PERBAIKAN LOGIKA PENGURANGAN ADA DI SINI
                     $netMinutes = $totalMinutes - $leaveMinutes;
                     if ($netMinutes < 0) $netMinutes = 0; 
 
